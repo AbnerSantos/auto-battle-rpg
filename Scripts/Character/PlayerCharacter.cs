@@ -1,10 +1,11 @@
-﻿using AutoBattleRPG.Scripts.Stage;
+﻿using AutoBattleRPG.Scripts.Dice;
+using AutoBattleRPG.Scripts.Stage;
 
 namespace AutoBattleRPG.Scripts.Character;
 
 public class PlayerCharacter : ACharacter
 {
-    public override int Atk => 5;
+    public override DiceRoll Atk => new DiceRoll(new List<Die>{ new Die(8) }, 2);
     public override int MaxHp => 20;
     public override ACharacter Target => GameMap.Enemy;
 
