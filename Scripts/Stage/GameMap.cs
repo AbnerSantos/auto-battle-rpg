@@ -1,10 +1,16 @@
 ﻿using System.Text;
+using AutoBattleRPG.Scripts.Character;
+using AutoBattleRPG.Scripts.Utility;
 
-namespace AutoBattleRPG.Scripts;
+namespace AutoBattleRPG.Scripts.Stage;
 
 public class GameMap
 {
     public readonly Tile[,] Grid;
+
+    public ACharacter Player { get; set; } = null!;
+    public ACharacter Enemy { get; set; } = null!;
+    public List<Tile> AvailableTiles { get; } = new();
 
     public GameMap(Settings settings)
     {
@@ -12,7 +18,11 @@ public class GameMap
         for (int i = 0; i < Grid.GetLength(0); i++)
         {
             for (int j = 0; j < Grid.GetLength(1); j++)
-                Grid[i, j] = new Tile(i, j);
+            {
+                Tile newTile = new Tile(i, j, this);
+                Grid[i, j] = newTile;
+                AvailableTiles.Add(newTile);
+            }
         }
     }
 
@@ -30,9 +40,7 @@ public class GameMap
 
             for (int j = 0; j < Grid.GetLength(1); j++)
             {
-                strBuilder.Append(' ');
                 strBuilder.Append(Grid[i, j]);
-                strBuilder.Append(' ');
             }
             
             strBuilder.Append('║');

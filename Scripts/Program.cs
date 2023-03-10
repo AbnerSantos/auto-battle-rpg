@@ -1,6 +1,9 @@
-﻿namespace AutoBattleRPG.Scripts;
+﻿using AutoBattleRPG.Scripts.Stage;
+using AutoBattleRPG.Scripts.Utility;
 
-class Program
+namespace AutoBattleRPG.Scripts;
+
+internal static class Program
 {
     private static void Main(string[] args)
     {
