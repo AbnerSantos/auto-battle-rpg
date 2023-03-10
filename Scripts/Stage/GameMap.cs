@@ -10,6 +10,7 @@ public class GameMap
 
     public ACharacter Player { get; set; } = null!;
     public ACharacter Enemy { get; set; } = null!;
+    public List<ACharacter> Characters { get; } = new();
     public List<Tile> AvailableTiles { get; } = new();
 
     public GameMap(Settings settings)
@@ -26,31 +27,31 @@ public class GameMap
         }
     }
 
-    public override string ToString()
+    public void DisplayMap()
     {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.Append('╔');
         strBuilder.Append('═', Grid.GetLength(0) * 3);
         strBuilder.Append('╗');
-        strBuilder.AppendLine();
+        Console.WriteLine(strBuilder.ToString());
 
         for (int i = 0; i < Grid.GetLength(0); i++)
         {
-            strBuilder.Append('║');
+            Console.Write('║');
 
             for (int j = 0; j < Grid.GetLength(1); j++)
             {
-                strBuilder.Append(Grid[i, j]);
+                Grid[i, j].DisplayTile();
             }
             
-            strBuilder.Append('║');
-            strBuilder.AppendLine();
+            Console.WriteLine('║');
         }
 
+        strBuilder.Clear();
+        
         strBuilder.Append('╚');
         strBuilder.Append('═', Grid.GetLength(0) * 3);
         strBuilder.Append('╝');
-
-        return strBuilder.ToString();
+        Console.WriteLine(strBuilder.ToString());
     }
 }

@@ -5,6 +5,7 @@ namespace AutoBattleRPG.Scripts.Character;
 
 public abstract class ACharacter
 {
+    public readonly string Name;
     protected readonly GameMap GameMap;
     private int _hp;
 
@@ -24,15 +25,16 @@ public abstract class ACharacter
     public int? Y => CurrentTile?.Y;
     public bool IsAlive => Hp > 0;
     
-    protected ACharacter(GameMap gameMap)
+    protected ACharacter(GameMap gameMap, string name)
     {
         GameMap = gameMap;
         Hp = MaxHp;
+        Name = name;
     }
 
     public void ComputeTurn()
     {
-        if (!Target.IsAlive) return;
+        if (!IsAlive || !Target.IsAlive) return;
         
         if (IsWithinRange(Target))
         {
@@ -67,11 +69,16 @@ public abstract class ACharacter
 
     private void TryDamage(int dmg, ACharacter attacker)
     {
+        Console.WriteLine($"{attacker.Name} attacks {Name} for {dmg} damage!");
         Hp -= dmg;
+        Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP left!");
         if (!IsAlive) OnDeath(attacker);
     }
-    
-    protected abstract void OnDeath(ACharacter attacker);
+
+    private void OnDeath(ACharacter attacker)
+    {
+        Console.WriteLine($"{Name} has been slain!");
+    }
 
     private void MoveTo(int x, int y)
     {
@@ -90,7 +97,7 @@ public abstract class ACharacter
     private bool IsWithinRange(ACharacter character)
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
-
-        return Tile.Distance(CurrentTile, character.CurrentTile) == 1;
+        int distance = Tile.Distance(CurrentTile, character.CurrentTile);
+        return distance == 1;
     }
 }

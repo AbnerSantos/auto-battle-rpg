@@ -25,14 +25,23 @@ public class Tile
     {
         Character = character;
         _gameMap.AvailableTiles.Remove(this);
-        switch (character)
+
+        if (_gameMap.Characters.Contains(character))
         {
-            case PlayerCharacter player:
-                _gameMap.Player = player;
-                break;
-            case EnemyCharacter enemy:
-                _gameMap.Enemy = enemy;
-                break;
+            _gameMap.DisplayMap();
+        }
+        else
+        {
+            switch (character)
+            {
+                case PlayerCharacter player:
+                    _gameMap.Player = player;
+                    break;
+                case EnemyCharacter enemy:
+                    _gameMap.Enemy = enemy;
+                    break;
+            }
+            _gameMap.Characters.Add(character);
         }
     }
 
@@ -42,14 +51,25 @@ public class Tile
         _gameMap.AvailableTiles.Add(this);
     }
 
-    public override string ToString()
+    public void DisplayTile()
     {
-        return " · ";
+        char c;
+        if (IsOccupied)
+        {
+            c = '×';
+            Console.ForegroundColor = Character is PlayerCharacter ? ConsoleColor.Green : ConsoleColor.Red;
+        }
+        else
+        {
+            c = '·';
+        }
+        Console.Write($" {c} ");
+        Console.ResetColor();
     }
 
     public static int Distance(Tile t1, Tile t2)
     {
         // Manhattan Distance
-        return Math.Abs(t1.X - t2.X) - Math.Abs(t1.Y - t2.Y);
+        return Math.Abs(t1.X - t2.X) + Math.Abs(t1.Y - t2.Y);
     }
 }

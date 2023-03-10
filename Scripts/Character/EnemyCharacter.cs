@@ -8,11 +8,7 @@ public class EnemyCharacter : ACharacter
     public override int MaxHp => 20;
     public override ACharacter Target => GameMap.Player;
 
-    public EnemyCharacter(GameMap gameMap) : base(gameMap)
-    {
-    }
-    
-    protected override void OnDeath(ACharacter attacker)
+    public EnemyCharacter(GameMap gameMap, string name) : base(gameMap, name)
     {
     }
 }
