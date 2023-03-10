@@ -12,19 +12,18 @@ public abstract class ACharacter
 
     public abstract DiceRoll Atk { get; }
     public abstract int MaxHp { get; }
+    public abstract int Range { get; }
     public abstract ACharacter Target { get; }
-
+    
+    public Tile? CurrentTile { get; private set; }
+    public int? X => CurrentTile?.X;
+    public int? Y => CurrentTile?.Y;
+    public bool IsAlive => Hp > 0;
     public int Hp
     {
         get => _hp;
         private set => _hp = Math.Clamp(value, 0, MaxHp);
     }
-    
-    public Tile? CurrentTile { get; private set; }
-
-    public int? X => CurrentTile?.X;
-    public int? Y => CurrentTile?.Y;
-    public bool IsAlive => Hp > 0;
     
     protected ACharacter(GameMap gameMap, string name)
     {
@@ -100,6 +99,6 @@ public abstract class ACharacter
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
         int distance = Tile.Distance(CurrentTile, character.CurrentTile);
-        return distance == 1;
+        return distance <= Range;
     }
 }
