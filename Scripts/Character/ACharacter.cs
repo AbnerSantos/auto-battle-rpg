@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Stage;
+﻿using AutoBattleRPG.Scripts.Dice;
+using AutoBattleRPG.Scripts.Stage;
 using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.Character;
@@ -9,7 +10,7 @@ public abstract class ACharacter
     protected readonly GameMap GameMap;
     private int _hp;
 
-    public abstract int Atk { get; }
+    public abstract DiceRoll Atk { get; }
     public abstract int MaxHp { get; }
     public abstract ACharacter Target { get; }
 
@@ -67,10 +68,11 @@ public abstract class ACharacter
         MoveTo(GameMap.AvailableTiles[randIndex]);
     }
 
-    private void TryDamage(int dmg, ACharacter attacker)
+    private void TryDamage(DiceRoll roll, ACharacter attacker)
     {
-        Console.WriteLine($"{attacker.Name} attacks {Name} for {dmg} damage!");
-        Hp -= dmg;
+        DiceResult result = roll.Roll();
+        Console.WriteLine($"{attacker.Name} attacks {Name} for {roll} = {result} damage!");
+        Hp -= result.Total;
         Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP left!");
         if (!IsAlive) OnDeath(attacker);
     }
