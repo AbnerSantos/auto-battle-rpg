@@ -7,6 +7,7 @@ public class PlayerCharacter : ACharacter
 {
     public override DiceRoll Atk => new DiceRoll(new List<Die>{ new Die(8) }, 2);
     public override int MaxHp => 20;
+    public override int Range => 2;
     public override ACharacter Target => GameMap.Enemy;
 
     public PlayerCharacter(GameMap gameMap, string name) : base(gameMap, name)

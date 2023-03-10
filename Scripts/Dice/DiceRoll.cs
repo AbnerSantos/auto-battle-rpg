@@ -30,14 +30,14 @@ public class DiceRoll
         using Dictionary<int, int>.Enumerator enumerator = dicePerSides.GetEnumerator();
 
         bool last = !enumerator.MoveNext();
-        do
+        while (!last)
         {
             KeyValuePair<int, int> current = enumerator.Current;
             strBuilder.Append($"{current.Value}d{current.Key}");
             
             last = !enumerator.MoveNext();
             if (!last || Modifier != 0) strBuilder.Append(" + ");
-        } while (!last);
+        }
 
         if (Modifier != 0) strBuilder.Append(Modifier);
         
