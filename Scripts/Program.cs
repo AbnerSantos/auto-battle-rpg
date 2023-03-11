@@ -1,6 +1,4 @@
 ﻿using AutoBattleRPG.Scripts.GameLoop;
-using AutoBattleRPG.Scripts.Stage;
-using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts;
 

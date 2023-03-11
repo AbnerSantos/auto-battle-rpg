@@ -70,7 +70,7 @@ public class MatchController
         gameMap.DisplayMap();
 
         // Shuffles order of character turns
-        gameMap.Characters.Sort((_, _) => RandomHelper.Rand.Next());
+        gameMap.Characters.Sort((_, _) => RandomHelper.Rand.Next().CompareTo(RandomHelper.Rand.Next()));
         
         Console.WriteLine($"Characters placed! {gameMap.Characters[0].Name} starts!");
         

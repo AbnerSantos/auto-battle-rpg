@@ -1,5 +1,6 @@
 ﻿using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Dice;
+using AutoBattleRPG.Scripts.Pathfinding;
 using AutoBattleRPG.Scripts.Stage;
 using AutoBattleRPG.Scripts.Utility;
 
@@ -10,6 +11,7 @@ public abstract class ACharacter
     public readonly string Name;
     protected readonly GameMap GameMap;
     private readonly ICharacterClassDelegate _characterClass;
+    private readonly AStarPathfinder _pathfinder;
     
     private int _hp;
 
@@ -38,37 +40,38 @@ public abstract class ACharacter
         _characterClass = characterClass;
         Hp = _characterClass.MaxHp;
         Name = name;
+        _pathfinder = characterClass.GeneratePathfinder(gameMap);
     }
 
     public bool TryProcessTurn()
     {
-        if (!IsAlive || CurrentTile == null || !TryGetNearestTarget(out ACharacter? target)) return false;
+        if (!IsAlive || CurrentTile == null) return false;
 
-        ACharacter nearestTarget = target!;
+        List<ACharacter> targetsByAscendingDistance = AvailableTargetsAscendingDistance();
+
+        if (targetsByAscendingDistance.Count == 0) return false;
         
+        ACharacter nearestTarget = targetsByAscendingDistance[0];
+        
+        // If within range, attack
         if (IsWithinRange(nearestTarget))
         {
             nearestTarget.TryDamage(Atk, this);
             return true;
         }
-        
-        if (nearestTarget.X > X)
+
+        // If not, move to the nearest reachable target
+        foreach (ACharacter target in targetsByAscendingDistance)
         {
-            MoveTo((int)X! + 1, (int)Y!);
-        }
-        else if (nearestTarget.X < X)
-        {
-            MoveTo((int)X! - 1, (int)Y!);
-        }
-        else if (nearestTarget.Y > Y)
-        {
-            MoveTo((int)X!, (int)Y! + 1);
-        }
-        else if (nearestTarget.Y < Y)
-        {
-            MoveTo((int)X!, (int)Y! - 1);
+            List<(int x, int y)>? path = _pathfinder.FindPath((CurrentTile.X, CurrentTile.Y), (target.CurrentTile!.X, target.CurrentTile!.Y));
+            
+            if (path == null) continue;
+            
+            MoveTo(path[0].x, path[0].y);
+            return true;
         }
 
+        Console.WriteLine("No path to any available targets!");
         return true;
     }
 
@@ -117,7 +120,7 @@ public abstract class ACharacter
 
     private void MoveTo(int x, int y)
     {
-        MoveTo(GameMap.Grid[x, y]);
+        MoveTo(GameMap[x, y]);
     }
 
     private void MoveTo(Tile tile)
@@ -132,26 +135,21 @@ public abstract class ACharacter
     private bool IsWithinRange(ACharacter character)
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
-        int distance = Tile.Distance(CurrentTile, character.CurrentTile);
+        int distance = _characterClass.AttackDistance(CurrentTile, character.CurrentTile);
         return distance <= Range;
     }
 
-    private bool TryGetNearestTarget(out ACharacter? finalTarget)
+    private List<ACharacter> AvailableTargetsAscendingDistance()
     {
-        ACharacter? nearestTarget = null;
-        int minDistance = int.MaxValue;
+        List<ACharacter> targets = new ();
         foreach (ACharacter target in AvailableTargets)
         {
-            if (!target.IsAlive || CurrentTile == null || target.CurrentTile == null) continue;
-            int distance = Tile.Distance(CurrentTile, target.CurrentTile);
-            
-            if (distance >= minDistance) continue;
-            
-            minDistance = distance;
-            nearestTarget = target;
+            if (target.IsAlive || target.CurrentTile != null) targets.Add(target);
         }
         
-        finalTarget = nearestTarget;
-        return nearestTarget != null;
+        targets.Sort((character1, character2) => _characterClass.AttackDistance(CurrentTile!, character1.CurrentTile!)
+            .CompareTo(_characterClass.AttackDistance(CurrentTile!, character2.CurrentTile!)));
+        
+        return targets;
     }
 }
