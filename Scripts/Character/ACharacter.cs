@@ -11,6 +11,7 @@ public abstract class ACharacter
     private int _hp;
 
     public abstract DiceRoll Atk { get; }
+    public abstract DiceRoll Def { get; }
     public abstract int MaxHp { get; }
     public abstract int Range { get; }
     public abstract ACharacter Target { get; }
@@ -69,11 +70,30 @@ public abstract class ACharacter
 
     private void TryDamage(DiceRoll roll, ACharacter attacker)
     {
-        DiceResult result = roll.Roll();
-        Console.WriteLine($"{attacker.Name} attacks {Name} for {roll} = {result} damage!");
-        Hp -= result.Total;
+        DiceResult rawDmg = roll.Roll();
+        Console.WriteLine($"{attacker.Name} attacks {Name} for {roll} = {rawDmg} damage!");
+        
+        DiceResult defense = Def.Roll();
+        Console.WriteLine($"{Name} blocks {Def} = {defense} damage!");
+        
+        int lostHp = rawDmg.Total - defense.Total;
+        if (lostHp > 0)
+        {
+            Console.WriteLine($"{Name} loses {rawDmg.Total - defense.Total} Hp!");
+            
+            Hp -= rawDmg.Total;
+            if (!IsAlive)
+            {
+                OnDeath(attacker);
+                return;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"{Name} blocks all incoming damage!");
+        }
+        
         Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP left!");
-        if (!IsAlive) OnDeath(attacker);
     }
 
     private void OnDeath(ACharacter attacker)
