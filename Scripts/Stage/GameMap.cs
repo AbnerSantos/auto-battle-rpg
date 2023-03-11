@@ -4,10 +4,9 @@ using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.Stage;
 
-public class GameMap
+public class GameMap : AMap<Tile>
 {
-    public readonly Tile[,] Grid;
-
+    public sealed override Tile[,] Grid { get; protected set; }
     public List<ACharacter> PlayerTeam { get; } = new();
     public List<ACharacter> EnemyTeam { get; } = new();
     public List<ACharacter> Characters { get; } = new();
@@ -16,9 +15,9 @@ public class GameMap
     public GameMap(Settings settings)
     {
         Grid = new Tile[settings.GridSize.x, settings.GridSize.y];
-        for (int i = 0; i < Grid.GetLength(0); i++)
+        for (int i = 0; i < Width; i++)
         {
-            for (int j = 0; j < Grid.GetLength(1); j++)
+            for (int j = 0; j < Height; j++)
             {
                 Tile newTile = new Tile(i, j, this);
                 Grid[i, j] = newTile;

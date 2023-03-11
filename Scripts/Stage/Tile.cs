@@ -1,4 +1,5 @@
 ﻿using AutoBattleRPG.Scripts.Character;
+using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.Stage;
 
@@ -67,9 +68,13 @@ public class Tile
         Console.ResetColor();
     }
 
-    public static int Distance(Tile t1, Tile t2)
+    public static int ManhattanDistance(Tile t1, Tile t2)
     {
-        // Manhattan Distance
-        return Math.Abs(t1.X - t2.X) + Math.Abs(t1.Y - t2.Y);
+        return Heuristics.ManhattanDistance((t1.X, t1.Y), (t2.X, t2.Y));
+    }
+
+    public static int ChebyshevDistance(Tile t1, Tile t2)
+    {
+        return Heuristics.ChebyshevDistance((t1.X, t1.Y), (t2.X, t2.Y));
     }
 }
