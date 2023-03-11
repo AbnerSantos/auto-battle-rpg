@@ -8,8 +8,8 @@ public class GameMap
 {
     public readonly Tile[,] Grid;
 
-    public ACharacter Player { get; set; } = null!;
-    public ACharacter Enemy { get; set; } = null!;
+    public List<ACharacter> PlayerTeam { get; } = new();
+    public List<ACharacter> EnemyTeam { get; } = new();
     public List<ACharacter> Characters { get; } = new();
     public List<Tile> AvailableTiles { get; } = new();
 

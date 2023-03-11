@@ -13,12 +13,16 @@ public abstract class ACharacter
     
     private int _hp;
 
+    public event Action<List<ACharacter>>? Died;
+
     public DiceRoll Atk => _characterClass.Atk;
     public DiceRoll Def => _characterClass.Def;
     public int MaxHp => _characterClass.MaxHp;
     public int Range => _characterClass.Range;
+    public char Symbol => _characterClass.Symbol;
     public Tile? CurrentTile { get; private set; }
-    public abstract ACharacter Target { get; }
+    public abstract List<ACharacter> AvailableTargets { get; }
+    public abstract List<ACharacter> Team { get; }
     public int? X => CurrentTile?.X;
     public int? Y => CurrentTile?.Y;
     public bool IsAlive => Hp > 0;
@@ -27,7 +31,7 @@ public abstract class ACharacter
         get => _hp;
         private set => _hp = Math.Clamp(value, 0, MaxHp);
     }
-    
+
     protected ACharacter(GameMap gameMap, string name, ICharacterClassDelegate characterClass)
     {
         GameMap = gameMap;
@@ -36,32 +40,36 @@ public abstract class ACharacter
         Name = name;
     }
 
-    public void ComputeTurn()
+    public bool TryProcessTurn()
     {
-        if (!IsAlive || !Target.IsAlive) return;
+        if (!IsAlive || CurrentTile == null || !TryGetNearestTarget(out ACharacter? target)) return false;
+
+        ACharacter nearestTarget = target!;
         
-        if (IsWithinRange(Target))
+        if (IsWithinRange(nearestTarget))
         {
-            Target.TryDamage(Atk, this);
-            return;
+            nearestTarget.TryDamage(Atk, this);
+            return true;
         }
         
-        if (Target.X > X)
+        if (nearestTarget.X > X)
         {
             MoveTo((int)X! + 1, (int)Y!);
         }
-        else if (Target.X < X)
+        else if (nearestTarget.X < X)
         {
             MoveTo((int)X! - 1, (int)Y!);
         }
-        else if (Target.Y > Y)
+        else if (nearestTarget.Y > Y)
         {
             MoveTo((int)X!, (int)Y! + 1);
         }
-        else if (Target.Y < Y)
+        else if (nearestTarget.Y < Y)
         {
             MoveTo((int)X!, (int)Y! - 1);
         }
+
+        return true;
     }
 
     public void PlaceOnMap()
@@ -101,7 +109,10 @@ public abstract class ACharacter
 
     private void OnDeath(ACharacter attacker)
     {
-        Console.WriteLine($"{Name} has been slain!");
+        Console.WriteLine($"{Name} has been slain by {attacker.Name}!");
+        CurrentTile?.Free();
+        CurrentTile = null;
+        Died?.Invoke(Team);
     }
 
     private void MoveTo(int x, int y)
@@ -123,5 +134,24 @@ public abstract class ACharacter
         if (CurrentTile == null || character.CurrentTile == null) return false;
         int distance = Tile.Distance(CurrentTile, character.CurrentTile);
         return distance <= Range;
+    }
+
+    private bool TryGetNearestTarget(out ACharacter? finalTarget)
+    {
+        ACharacter? nearestTarget = null;
+        int minDistance = int.MaxValue;
+        foreach (ACharacter target in AvailableTargets)
+        {
+            if (!target.IsAlive || CurrentTile == null || target.CurrentTile == null) continue;
+            int distance = Tile.Distance(CurrentTile, target.CurrentTile);
+            
+            if (distance >= minDistance) continue;
+            
+            minDistance = distance;
+            nearestTarget = target;
+        }
+        
+        finalTarget = nearestTarget;
+        return nearestTarget != null;
     }
 }
