@@ -7,7 +7,7 @@ public class DiceRoll
     public int Modifier { get; private set; }
     public List<Die> Dice { get; private set; }
 
-    public DiceRoll(List<Die> dice, int modifier)
+    public DiceRoll(List<Die> dice, int modifier = 0)
     {
         Modifier = modifier;
         Dice = dice;

@@ -18,7 +18,7 @@ public class DiceResult
             total += result;
             return (die, result);
         }));
-        Total = total;
+        Total = total + Modifier;
     }
 
     public override string ToString()
