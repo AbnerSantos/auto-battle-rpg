@@ -35,10 +35,10 @@ public class Tile
             switch (character)
             {
                 case PlayerCharacter player:
-                    _gameMap.Player = player;
+                    _gameMap.PlayerTeam.Add(player);
                     break;
                 case EnemyCharacter enemy:
-                    _gameMap.Enemy = enemy;
+                    _gameMap.EnemyTeam.Add(enemy);
                     break;
             }
             _gameMap.Characters.Add(character);
@@ -56,7 +56,7 @@ public class Tile
         char c;
         if (IsOccupied)
         {
-            c = '×';
+            c = Character!.Symbol;
             Console.ForegroundColor = Character is PlayerCharacter ? ConsoleColor.Green : ConsoleColor.Red;
         }
         else
