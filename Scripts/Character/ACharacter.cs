@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Dice;
+﻿using AutoBattleRPG.Scripts.Character.Classes;
+using AutoBattleRPG.Scripts.Dice;
 using AutoBattleRPG.Scripts.Stage;
 using AutoBattleRPG.Scripts.Utility;
 
@@ -8,15 +9,16 @@ public abstract class ACharacter
 {
     public readonly string Name;
     protected readonly GameMap GameMap;
+    private readonly ICharacterClassDelegate _characterClass;
+    
     private int _hp;
 
-    public abstract DiceRoll Atk { get; }
-    public abstract DiceRoll Def { get; }
-    public abstract int MaxHp { get; }
-    public abstract int Range { get; }
-    public abstract ACharacter Target { get; }
-    
+    public DiceRoll Atk => _characterClass.Atk;
+    public DiceRoll Def => _characterClass.Def;
+    public int MaxHp => _characterClass.MaxHp;
+    public int Range => _characterClass.Range;
     public Tile? CurrentTile { get; private set; }
+    public abstract ACharacter Target { get; }
     public int? X => CurrentTile?.X;
     public int? Y => CurrentTile?.Y;
     public bool IsAlive => Hp > 0;
@@ -26,10 +28,11 @@ public abstract class ACharacter
         private set => _hp = Math.Clamp(value, 0, MaxHp);
     }
     
-    protected ACharacter(GameMap gameMap, string name)
+    protected ACharacter(GameMap gameMap, string name, ICharacterClassDelegate characterClass)
     {
         GameMap = gameMap;
-        Hp = MaxHp;
+        _characterClass = characterClass;
+        Hp = _characterClass.MaxHp;
         Name = name;
     }
 
@@ -80,8 +83,8 @@ public abstract class ACharacter
         if (lostHp > 0)
         {
             Console.WriteLine($"{Name} loses {rawDmg.Total - defense.Total} Hp!");
-            
-            Hp -= rawDmg.Total;
+
+            Hp -= lostHp;
             if (!IsAlive)
             {
                 OnDeath(attacker);

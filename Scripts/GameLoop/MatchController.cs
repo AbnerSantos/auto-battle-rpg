@@ -1,4 +1,5 @@
 ﻿using AutoBattleRPG.Scripts.Character;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Stage;
 using AutoBattleRPG.Scripts.Utility;
 
@@ -36,8 +37,13 @@ public class MatchController
     {
         GameMap gameMap = new GameMap(settings);
         
-        PlayerCharacter player = new PlayerCharacter(gameMap, "Player");
-        EnemyCharacter enemy = new EnemyCharacter(gameMap, "Enemy");
+        Console.WriteLine("Choose your class:");
+        ICharacterClassDelegate playerClass = ChooseClass();
+        PlayerCharacter player = new PlayerCharacter(gameMap, "Player", playerClass);
+        
+        Console.WriteLine("Choose your enemy's class:");
+        ICharacterClassDelegate enemyClass = ChooseClass();
+        EnemyCharacter enemy = new EnemyCharacter(gameMap, "Enemy", enemyClass);
         
         player.PlaceOnMap();
         enemy.PlaceOnMap();
@@ -78,5 +84,18 @@ public class MatchController
     {
         Console.WriteLine("\nPress any key to continue...\n");
         Console.ReadKey(true);
+    }
+
+    private ICharacterClassDelegate ChooseClass()
+    {
+        char option = '1';
+        foreach ((_, ICharacterClassDelegate characterClass) in CharacterClasses.PlayerClasses)
+        {
+            Console.WriteLine($"[{option}] - {characterClass.Name}");
+            option = Convert.ToChar(option + 1);
+        }
+
+        ConsoleKeyInfo key = InputHelper.GetKey('1', Convert.ToChar(option - 1));
+        return CharacterClasses.PlayerClasses[(CharacterClasses.PlayerClass) key.KeyChar - '1'];
     }
 }
