@@ -1,4 +1,6 @@
-﻿using AutoBattleRPG.Scripts.Stage;
+﻿using AutoBattleRPG.Scripts.Character.Classes;
+using AutoBattleRPG.Scripts.Dice;
+using AutoBattleRPG.Scripts.Stage;
 using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.Character;
@@ -7,28 +9,30 @@ public abstract class ACharacter
 {
     public readonly string Name;
     protected readonly GameMap GameMap;
+    private readonly ICharacterClassDelegate _characterClass;
+    
     private int _hp;
 
-    public abstract int Atk { get; }
-    public abstract int MaxHp { get; }
+    public DiceRoll Atk => _characterClass.Atk;
+    public DiceRoll Def => _characterClass.Def;
+    public int MaxHp => _characterClass.MaxHp;
+    public int Range => _characterClass.Range;
+    public Tile? CurrentTile { get; private set; }
     public abstract ACharacter Target { get; }
-
+    public int? X => CurrentTile?.X;
+    public int? Y => CurrentTile?.Y;
+    public bool IsAlive => Hp > 0;
     public int Hp
     {
         get => _hp;
         private set => _hp = Math.Clamp(value, 0, MaxHp);
     }
     
-    public Tile? CurrentTile { get; private set; }
-
-    public int? X => CurrentTile?.X;
-    public int? Y => CurrentTile?.Y;
-    public bool IsAlive => Hp > 0;
-    
-    protected ACharacter(GameMap gameMap, string name)
+    protected ACharacter(GameMap gameMap, string name, ICharacterClassDelegate characterClass)
     {
         GameMap = gameMap;
-        Hp = MaxHp;
+        _characterClass = characterClass;
+        Hp = _characterClass.MaxHp;
         Name = name;
     }
 
@@ -67,12 +71,32 @@ public abstract class ACharacter
         MoveTo(GameMap.AvailableTiles[randIndex]);
     }
 
-    private void TryDamage(int dmg, ACharacter attacker)
+    private void TryDamage(DiceRoll roll, ACharacter attacker)
     {
-        Console.WriteLine($"{attacker.Name} attacks {Name} for {dmg} damage!");
-        Hp -= dmg;
+        DiceResult rawDmg = roll.Roll();
+        Console.WriteLine($"{attacker.Name} attacks {Name} for {roll} = {rawDmg} damage!");
+        
+        DiceResult defense = Def.Roll();
+        Console.WriteLine($"{Name} blocks {Def} = {defense} damage!");
+        
+        int lostHp = rawDmg.Total - defense.Total;
+        if (lostHp > 0)
+        {
+            Console.WriteLine($"{Name} loses {rawDmg.Total - defense.Total} Hp!");
+
+            Hp -= lostHp;
+            if (!IsAlive)
+            {
+                OnDeath(attacker);
+                return;
+            }
+        }
+        else
+        {
+            Console.WriteLine($"{Name} blocks all incoming damage!");
+        }
+        
         Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP left!");
-        if (!IsAlive) OnDeath(attacker);
     }
 
     private void OnDeath(ACharacter attacker)
@@ -98,6 +122,6 @@ public abstract class ACharacter
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
         int distance = Tile.Distance(CurrentTile, character.CurrentTile);
-        return distance == 1;
+        return distance <= Range;
     }
 }
