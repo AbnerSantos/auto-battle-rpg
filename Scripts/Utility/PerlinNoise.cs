@@ -133,9 +133,7 @@ public static class PerlinNoise
             {
                 // Normalization
                 texture[x,y] = (texture[x,y] - min) / (max - min);
-                Console.Write($"{texture[x,y] }");
             }
-            Console.WriteLine();
         }
 
         return texture;

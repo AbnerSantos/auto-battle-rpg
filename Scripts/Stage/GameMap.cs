@@ -19,7 +19,7 @@ public class GameMap : AMap<Tile>
         {
             for (int j = 0; j < Height; j++)
             {
-                Tile newTile = new Tile(i, j, this);
+                Tile newTile = new Tile(i, j, /*Terrain.TerrainType.Plains*/(Terrain.TerrainType) RandomHelper.Rand.Next(2), this);
                 Grid[i, j] = newTile;
                 AvailableTiles.Add(newTile);
             }

@@ -7,19 +7,19 @@ public class Tile
 {
     public readonly int X;
     public readonly int Y;
-    
+    public readonly Terrain.TerrainType Terrain;
+
     private readonly GameMap _gameMap;
-        
+
     public ACharacter? Character { get; set; }
     public bool IsOccupied => Character != null;
-    public int MovCost => 1;
 
-    
-    public Tile(int x, int y, GameMap gameMap)
+    public Tile(int x, int y, Terrain.TerrainType terrain, GameMap gameMap)
     {
         X = x;
         Y = y;
         _gameMap = gameMap;
+        Terrain = terrain;
     }
 
     public void Occupy(ACharacter character)
@@ -27,23 +27,18 @@ public class Tile
         Character = character;
         _gameMap.AvailableTiles.Remove(this);
 
-        if (_gameMap.Characters.Contains(character))
+        if (_gameMap.Characters.Contains(character)) return;
+        
+        switch (character)
         {
-            _gameMap.DisplayMap();
+            case PlayerCharacter player:
+                _gameMap.PlayerTeam.Add(player);
+                break;
+            case EnemyCharacter enemy:
+                _gameMap.EnemyTeam.Add(enemy);
+                break;
         }
-        else
-        {
-            switch (character)
-            {
-                case PlayerCharacter player:
-                    _gameMap.PlayerTeam.Add(player);
-                    break;
-                case EnemyCharacter enemy:
-                    _gameMap.EnemyTeam.Add(enemy);
-                    break;
-            }
-            _gameMap.Characters.Add(character);
-        }
+        _gameMap.Characters.Add(character);
     }
 
     public void Free()
@@ -54,17 +49,15 @@ public class Tile
 
     public void DisplayTile()
     {
-        char c;
         if (IsOccupied)
         {
-            c = Character!.Symbol;
-            Console.ForegroundColor = Character is PlayerCharacter ? ConsoleColor.Green : ConsoleColor.Red;
+            ConsoleColor color = Character is PlayerCharacter ? ConsoleColor.Green : ConsoleColor.Red;
+            Terrain.Draw(Character!.Symbol, color);
         }
         else
         {
-            c = '·';
+            Terrain.Draw();
         }
-        Console.Write($" {c} ");
         Console.ResetColor();
     }
 
