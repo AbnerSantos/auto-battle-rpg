@@ -111,7 +111,7 @@ public class MatchController
         char option = '1';
         foreach ((_, ICharacterClassDelegate characterClass) in CharacterClasses.PlayerClasses)
         {
-            Console.WriteLine($"[{option}] - {characterClass.Name}");
+            Console.WriteLine($"[{option}] - {characterClass.Name} - {characterClass.Description}");
             option = Convert.ToChar(option + 1);
         }
 
@@ -149,8 +149,7 @@ public class MatchController
         bool isDefaultName = string.IsNullOrWhiteSpace(rawName);
         
         // Class name if no name has been input
-        if (isDefaultName) name = $"{prefix}{characterClass.Name}";
-        else name = $"{name} ({characterClass.Name})";
+        name = isDefaultName ? $"{prefix}{characterClass.Name}" : $"{name} ({characterClass.Name})";
 
         bool IsUnique() => !team.Exists(character => character.Name.Equals(name));
         
@@ -161,6 +160,6 @@ public class MatchController
             name = $"{prefix}{characterClass.Name} {instances++}";
         }
 
-        return name!;
+        return name;
     }
 }

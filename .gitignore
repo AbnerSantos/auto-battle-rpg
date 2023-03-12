@@ -152,3 +152,6 @@ _NCrunch*
 **/.idea/**/*.iml
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
+
+# Draw.io auto saves
+*.bkp

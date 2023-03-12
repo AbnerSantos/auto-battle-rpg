@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Character.Classes;
+﻿using AutoBattleRPG.Scripts.BehaviorTree;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Stage;
 
 namespace AutoBattleRPG.Scripts.Character;
