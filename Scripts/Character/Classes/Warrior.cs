@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Dice;
+﻿using AutoBattleRPG.Scripts.BehaviorTree;
+using AutoBattleRPG.Scripts.Dice;
 using AutoBattleRPG.Scripts.Pathfinding;
 using AutoBattleRPG.Scripts.Stage;
 
@@ -7,12 +8,24 @@ namespace AutoBattleRPG.Scripts.Character.Classes;
 public class Warrior : ICharacterClassDelegate
 {
     public string Name => "Warrior";
+    public string Description => "High damaging melee fighter that uses his shield to defend himself.";
     public char Symbol => 'w';
     public DiceRoll Atk => new DiceRoll(new List<Die>{ new Die(10) }, 2);
     public DiceRoll Def => new DiceRoll(new List<Die>{ new Die(4) });
     public int MaxHp => 20;
     public int Range => 1;
     public int Movement => 2;
+    
+    public BehaviorTree<RpgBtData> SetupBehaviorTree(RpgBtData rpgBtData)
+    {
+        IsWithinTargetRangeSelectorNode checkTarget = new IsWithinTargetRangeSelectorNode
+        (
+            ifFalse: new MoveTowardsTargetNode(),
+            ifTrue: new AttackTargetInRangeNode()
+        );
+
+        return new BehaviorTree<RpgBtData>(checkTarget, rpgBtData);
+    }
 
     public AStarPathfinder GeneratePathfinder(GameMap gameMap)
     {

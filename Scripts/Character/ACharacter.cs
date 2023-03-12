@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Character.Classes;
+﻿using AutoBattleRPG.Scripts.BehaviorTree;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Dice;
 using AutoBattleRPG.Scripts.Pathfinding;
 using AutoBattleRPG.Scripts.Stage;
@@ -9,9 +10,10 @@ namespace AutoBattleRPG.Scripts.Character;
 public abstract class ACharacter
 {
     public readonly string Name;
+    public readonly AStarPathfinder Pathfinder;
+    public readonly BehaviorTree<RpgBtData> BehaviorTree;
     protected readonly GameMap GameMap;
     private readonly ICharacterClassDelegate _characterClass;
-    private readonly AStarPathfinder _pathfinder;
     
     private int _hp;
     private int _movLeft;
@@ -41,42 +43,16 @@ public abstract class ACharacter
         GameMap = gameMap;
         _characterClass = characterClass;
         Hp = _characterClass.MaxHp;
+        BehaviorTree = _characterClass.SetupBehaviorTree(new RpgBtData(GameMap, this));
         Name = name;
-        _pathfinder = characterClass.GeneratePathfinder(gameMap);
+        Pathfinder = characterClass.GeneratePathfinder(gameMap);
     }
 
     public bool TryProcessTurn()
     {
         if (!IsAlive || CurrentTile == null) return false;
 
-        List<ACharacter> targetsByAscendingDistance = AvailableTargetsAscendingDistance();
-
-        if (targetsByAscendingDistance.Count == 0) return false;
-        
-        ACharacter nearestTarget = targetsByAscendingDistance[0];
-        
-        // If within range, attack
-        if (IsWithinRange(nearestTarget))
-        {
-            nearestTarget.TryDamage(Atk, this);
-            return true;
-        }
-
-        _movLeft = MaxMovement;
-        
-        // If not, move to the nearest reachable target
-        foreach (ACharacter target in targetsByAscendingDistance)
-        {
-            List<(int x, int y)>? path = _pathfinder.FindPath((CurrentTile.X, CurrentTile.Y), (target.CurrentTile!.X, target.CurrentTile!.Y));
-            
-            if (path == null) continue;
-
-            MoveTowardsPath(path, target);
-            return true;
-        }
-
-        Console.WriteLine("No path to any available targets!");
-        return true;
+        return BehaviorTree.Execute();
     }
 
     public void PlaceOnMap()
@@ -86,7 +62,12 @@ public abstract class ACharacter
         MoveTo(GameMap.AvailableTiles[randIndex]);
     }
 
-    private void TryDamage(DiceRoll roll, ACharacter attacker)
+    public void ResetMovement()
+    {
+        _movLeft = MaxMovement;
+    }
+
+    public void TryDamage(DiceRoll roll, ACharacter attacker)
     {
         DiceResult rawDmg = roll.Roll();
         _characterClass.AttackQuote(attacker, this, roll, rawDmg);
@@ -137,7 +118,7 @@ public abstract class ACharacter
         CurrentTile.Occupy(this);
     }
 
-    private void MoveTowardsPath(List<(int x, int y)> path, ACharacter target)
+    public void MoveTowardsPath(List<(int x, int y)> path, ACharacter target)
     {
         foreach ((int x, int y) in path)
         {
@@ -156,7 +137,7 @@ public abstract class ACharacter
         GameMap.DisplayMap();
     }
 
-    private bool IsWithinRange(ACharacter character)
+    public bool IsWithinRange(ACharacter character)
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
         
@@ -164,7 +145,7 @@ public abstract class ACharacter
         return distance <= Range;
     }
 
-    private List<ACharacter> AvailableTargetsAscendingDistance()
+    public List<ACharacter> AvailableTargetsAscendingDistance()
     {
         List<ACharacter> targets = new ();
         foreach (ACharacter target in AvailableTargets)

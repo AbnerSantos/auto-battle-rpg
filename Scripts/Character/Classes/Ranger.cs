@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Dice;
+﻿using AutoBattleRPG.Scripts.BehaviorTree;
+using AutoBattleRPG.Scripts.Dice;
 using AutoBattleRPG.Scripts.Pathfinding;
 using AutoBattleRPG.Scripts.Stage;
 
@@ -7,11 +8,12 @@ namespace AutoBattleRPG.Scripts.Character.Classes;
 public class Ranger : ICharacterClassDelegate
 {
     public string Name => "Ranger";
+    public string Description => "Can easily traverse thick forests and uses a bow for ranged attacks that go over obstacles.";
     public char Symbol => 'r';
     public DiceRoll Atk => new DiceRoll(new List<Die>{ new Die(6) }, 3);
     public DiceRoll Def => new DiceRoll(new List<Die>{ new Die(2) });
     public int MaxHp => 20;
-    public int Range => 3;
+    public int Range => 2;
     public int Movement => 2;
     
     public Dictionary<Terrain.TerrainType, int> TerrainMovModifiers { get; } = new()
@@ -19,6 +21,17 @@ public class Ranger : ICharacterClassDelegate
         { Terrain.TerrainType.Forest, -1 }
     };
 
+    public BehaviorTree<RpgBtData> SetupBehaviorTree(RpgBtData rpgBtData)
+    {
+        IsWithinTargetRangeSelectorNode checkTarget = new IsWithinTargetRangeSelectorNode
+        (
+            ifFalse: new MoveTowardsTargetNode(),
+            ifTrue: new AttackTargetInRangeNode()
+        );
+
+        return new BehaviorTree<RpgBtData>(checkTarget, rpgBtData);
+    }
+    
     public AStarPathfinder GeneratePathfinder(GameMap gameMap)
     {
         return new AStarPathfinder(gameMap.Width, gameMap.Height,
