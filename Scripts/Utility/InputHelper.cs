@@ -24,7 +24,7 @@ public static class InputHelper
         return key;
     }
 
-    public static int GetNumber(int lowerBound, int upperBound)
+    public static int GetInteger(int lowerBound, int upperBound)
     {
         int? number = null;
 
@@ -48,5 +48,31 @@ public static class InputHelper
         } while (number == null);
 
         return (int) number;
+    }
+    
+    public static float GetFloat(float lowerBound, float upperBound)
+    {
+        float? number = null;
+
+        do
+        {
+            string? line = Console.ReadLine();
+            if (line == null) continue;
+            
+            if (float.TryParse(line, out float num)) number = num;
+            else
+            {
+                Console.Write("Not a number. Try again: ");
+                continue;
+            }
+
+            if (number >= lowerBound && number <= upperBound) continue;
+            
+            number = null;
+            Console.Write("Number out of bounds. Try again: ");
+
+        } while (number == null);
+
+        return (float) number;
     }
 }

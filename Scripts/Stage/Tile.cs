@@ -14,6 +14,11 @@ public class Tile
     public ACharacter? Character { get; set; }
     public bool IsOccupied => Character != null;
 
+    public Tile? Up => Y + 1 < _gameMap.Height ? _gameMap[X, Y + 1] : null;
+    public Tile? Down => Y - 1 > 0 ? _gameMap[X, Y - 1] : null;
+    public Tile? Right => X + 1 < _gameMap.Height ? _gameMap[X + 1, Y] : null;
+    public Tile? Left => X - 1 > 0 ? _gameMap[X - 1, Y] : null;
+
     public Tile(int x, int y, Terrain.TerrainType terrain, GameMap gameMap)
     {
         X = x;
@@ -69,5 +74,14 @@ public class Tile
     public static int ChebyshevDistance(Tile t1, Tile t2)
     {
         return Heuristics.ChebyshevDistance((t1.X, t1.Y), (t2.X, t2.Y));
+    }
+
+    public static string GetCardinalDirection(Tile t1, Tile t2)
+    {
+        if (t2 == t1.Up) return "up";
+        if (t2 == t1.Down) return "down";
+        if (t2 == t1.Right) return "right";
+        if (t2 == t1.Left) return "left";
+        return "";
     }
 }
