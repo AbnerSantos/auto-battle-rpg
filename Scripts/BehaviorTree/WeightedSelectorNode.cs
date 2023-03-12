@@ -16,7 +16,7 @@ public class WeightedSelectorNode : ABtNode<RpgBtData>
 
         if (currentThreshold == 0) throw new Exceptions.NoValidAttack();
 
-        int roll = RandomHelper.Rand.Next(1, currentThreshold);
+        int roll = RandomHelper.Rand.Next(1, currentThreshold + 1);
         foreach ((int weightThreshold, ABtNode<RpgBtData> node) in thresholds)
         {
             if (roll > weightThreshold) continue;
