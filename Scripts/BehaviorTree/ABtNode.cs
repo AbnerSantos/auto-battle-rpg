@@ -2,7 +2,7 @@
 
 public abstract class ABtNode<T>
 {
-    protected readonly List<ABtNode<T?>> ChildNodes = new();
+    public readonly List<ABtNode<T?>> ChildNodes = new();
 
     private T? _btData;
     public T? BtData
@@ -20,13 +20,13 @@ public abstract class ABtNode<T>
 
     public abstract void Execute();
 
-    protected void Add(ABtNode<T?> node)
+    public void Add(ABtNode<T> node)
     {
-        ChildNodes.Add(node);
         node.BtData = BtData;
+        ChildNodes.Add(node!);
     }
 
-    protected void Remove(ABtNode<T?> node)
+    public void Remove(ABtNode<T?> node)
     {
         ChildNodes.Remove(node);
     }

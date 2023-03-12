@@ -12,30 +12,40 @@ public abstract class ACharacter
     public readonly string Name;
     public readonly AStarPathfinder Pathfinder;
     public readonly BehaviorTree<RpgBtData> BehaviorTree;
-    protected readonly GameMap GameMap;
-    private readonly ICharacterClassDelegate _characterClass;
+    public readonly Dictionary<Terrain.TerrainType, int> TerrainMovModifiers = new();
+    public readonly List<INamedSkill> AllSkills;
     
+    protected readonly GameMap GameMap;
+    
+    private readonly ICharacterClassDelegate _characterClass;
+    private readonly List<APassiveSkill> _passiveSkills;
+
     private int _hp;
+    private int _mana;
     private int _movLeft;
 
     public event Action<List<ACharacter>>? Died;
 
-    public DiceRoll Atk => _characterClass.Atk;
-    public DiceRoll Def => _characterClass.Def;
+    public DiceRoll? Def => _characterClass.Def;
     public int MaxHp => _characterClass.MaxHp;
+    public int MaxMana => _characterClass.MaxMana;
     public int Range => _characterClass.Range;
     public int MaxMovement => _characterClass.Movement;
     public char Symbol => _characterClass.Symbol;
     public Tile? CurrentTile { get; private set; }
     public abstract List<ACharacter> AvailableTargets { get; }
     public abstract List<ACharacter> Team { get; }
-    public int? X => CurrentTile?.X;
-    public int? Y => CurrentTile?.Y;
     public bool IsAlive => Hp > 0;
-    public int Hp
+
+    private int Hp
     {
         get => _hp;
-        private set => _hp = Math.Clamp(value, 0, MaxHp);
+        set => _hp = Math.Clamp(value, 0, MaxHp);
+    }
+    public int Mana
+    {
+        get => _mana;
+        private set => _mana = Math.Clamp(value, 0, MaxMana);
     }
 
     protected ACharacter(GameMap gameMap, string name, ICharacterClassDelegate characterClass)
@@ -43,14 +53,23 @@ public abstract class ACharacter
         GameMap = gameMap;
         _characterClass = characterClass;
         Hp = _characterClass.MaxHp;
+        Mana = _characterClass.MaxMana;
         BehaviorTree = _characterClass.SetupBehaviorTree(new RpgBtData(GameMap, this));
+        _passiveSkills = _characterClass.SetupPassiveSkills(this);
+        var pickUpSkills = _characterClass.SetupStartingPickUpSkills(this);
+        var activeSkills = FetchActiveSkills();
+        AllSkills = new List<INamedSkill>(activeSkills);
+        AllSkills.AddRange(pickUpSkills);
+        AllSkills.AddRange(_passiveSkills);
         Name = name;
-        Pathfinder = characterClass.GeneratePathfinder(gameMap);
+        Pathfinder = characterClass.GeneratePathfinder(gameMap, this);
     }
 
     public bool TryProcessTurn()
     {
         if (!IsAlive || CurrentTile == null) return false;
+
+        foreach (APassiveSkill skill in _passiveSkills) skill.Execute();
 
         return BehaviorTree.Execute();
     }
@@ -67,18 +86,20 @@ public abstract class ACharacter
         _movLeft = MaxMovement;
     }
 
-    public void TryDamage(DiceRoll roll, ACharacter attacker)
+    public void TryDamage(int rawDmg, ACharacter attacker)
     {
-        DiceResult rawDmg = roll.Roll();
-        _characterClass.AttackQuote(attacker, this, roll, rawDmg);
+        int defenseTotal = 0;
+        if (Def != null)
+        {
+            DiceResult defense = Def.Roll();
+            _characterClass.DefenseQuote(this, defense);
+            defenseTotal = defense.Total;
+        }
         
-        DiceResult defense = Def.Roll();
-        _characterClass.DefenseQuote(this, defense);
-        
-        int lostHp = rawDmg.Total - defense.Total;
+        int lostHp = rawDmg - defenseTotal;
         if (lostHp > 0)
         {
-            Console.WriteLine($"{Name} loses {rawDmg.Total - defense.Total} Hp!");
+            Console.WriteLine($"{Name} loses {lostHp} Hp!");
 
             Hp -= lostHp;
             if (!IsAlive)
@@ -122,7 +143,7 @@ public abstract class ACharacter
     {
         foreach ((int x, int y) in path)
         {
-            int movCost = _characterClass.GetMovementCost(GameMap[x, y]);
+            int movCost = GetMovementCost(GameMap[x, y]);
             
             if (_movLeft < movCost) continue;
             
@@ -135,6 +156,12 @@ public abstract class ACharacter
             return;
         }
         GameMap.DisplayMap();
+    }
+
+    public int GetMovementCost(Tile tile)
+    {
+        TerrainMovModifiers.TryGetValue(tile.Terrain, out int modifier);
+        return Terrain.MovementCostPerTerrain[tile.Terrain] + modifier;
     }
 
     public bool IsWithinRange(ACharacter character)
@@ -157,5 +184,38 @@ public abstract class ACharacter
             .CompareTo(_characterClass.AttackDistance(CurrentTile!, character2.CurrentTile!)));
         
         return targets;
+    }
+
+    public void HealMana(DiceRoll manaRecovery)
+    {
+        DiceResult mana = manaRecovery.Roll();
+        Console.WriteLine($"{Name} concentrates and recovers {manaRecovery} = {mana} mana!");
+        Console.WriteLine($"{Name} has {Mana}/{MaxMana} Mana!");
+    }
+
+    public void SpendMana(int total)
+    {
+        if (total <= 0) return;
+        
+        Mana -= total;
+        Console.WriteLine($"{Name} has {Mana}/{MaxMana} Mana left!");
+    }
+
+    private List<AActiveSkill> FetchActiveSkills()
+    {
+        return ChildActiveSkills(BehaviorTree.RootNode!);
+    }
+
+    private List<AActiveSkill> ChildActiveSkills(ABtNode<RpgBtData?> node)
+    {
+        List<AActiveSkill> activeSkills = new();
+        if (node is AActiveSkill active) activeSkills.Add(active);
+        
+        foreach (ABtNode<RpgBtData?> childNode in node.ChildNodes)
+        {
+           activeSkills.AddRange(ChildActiveSkills(childNode));
+        }
+
+        return activeSkills;
     }
 }

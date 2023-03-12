@@ -35,14 +35,13 @@ public class MatchController
             
         Console.WriteLine($"What's the height of your battlefield? (Min: {Settings.GridMinimum.y}, Recommended: {Settings.DefaultSettings.GridSize.y})");
         int height = InputHelper.GetInteger(Settings.GridMinimum.y, int.MaxValue);
-
-        int maxPartySize = Settings.MaxPartySize(width, height);
-        Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
-        int partySize = InputHelper.GetInteger(1, maxPartySize);
         
         Console.WriteLine($"How dense do you want forests to be? (Min: {Settings.ForestConstraints.min}, Max: {Settings.ForestConstraints.max}, Recommended: {Settings.DefaultSettings.ForestDensity})");
         float forestDensity = InputHelper.GetFloat(Settings.ForestConstraints.min, Settings.ForestConstraints.max);
 
+        int maxPartySize = Settings.MaxPartySize(width, height);
+        Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
+        int partySize = InputHelper.GetInteger(1, maxPartySize);
         Settings settings = new Settings
         {
             GridSize = (width, height),

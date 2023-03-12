@@ -11,7 +11,7 @@ public class Settings
     public static (int x, int y) GridMinimum = (2, 2);
     public static (float min, float max) ForestConstraints = (0f, 1f);
         
-    public static Settings DefaultSettings = new Settings
+    public static Settings DefaultSettings = new()
     {
         GridSize = (16, 10),
         PartySize = 2,
