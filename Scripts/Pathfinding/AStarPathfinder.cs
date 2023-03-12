@@ -3,7 +3,7 @@
 public class AStarPathfinder
 {
     private readonly PathMap _pathMap;
-    private readonly SortedSet<PathNode> _openList = new (new PathNodeComparer());
+    private readonly List<PathNode> _openList = new ();
     private readonly HashSet<PathNode> _closedList = new ();
     private readonly IAStarInfoProviderDelegate _infoProvider;
 
@@ -31,7 +31,8 @@ public class AStarPathfinder
         
         while(_openList.Count > 0)
         {
-            PathNode currentNode = _openList.First();
+            _openList.Sort(new PathNodeComparer());
+            PathNode currentNode = _openList[0];
 
             if(currentNode == targetNode) return RetrievePath(startNode, targetNode);
 
@@ -42,11 +43,11 @@ public class AStarPathfinder
             {
                 if(_closedList.Contains(neighbor)) continue;
                 
-                int newGcost = currentNode.GCost + 1;
-                if (newGcost >= neighbor.GCost) continue;
+                int newGCost = currentNode.GCost + _infoProvider.GetMovementCost(neighbor.X, neighbor.Y);
+                if (newGCost >= neighbor.GCost) continue;
                 
                 neighbor.PrevNode = currentNode;
-                neighbor.GCost = newGcost;
+                neighbor.GCost = newGCost;
                 neighbor.HCost = _infoProvider.Distance(neighbor, targetNode);
 
                 _openList.Add(neighbor);

@@ -14,6 +14,7 @@ public abstract class ACharacter
     private readonly AStarPathfinder _pathfinder;
     
     private int _hp;
+    private int _movLeft;
 
     public event Action<List<ACharacter>>? Died;
 
@@ -21,6 +22,7 @@ public abstract class ACharacter
     public DiceRoll Def => _characterClass.Def;
     public int MaxHp => _characterClass.MaxHp;
     public int Range => _characterClass.Range;
+    public int MaxMovement => _characterClass.Movement;
     public char Symbol => _characterClass.Symbol;
     public Tile? CurrentTile { get; private set; }
     public abstract List<ACharacter> AvailableTargets { get; }
@@ -60,14 +62,16 @@ public abstract class ACharacter
             return true;
         }
 
+        _movLeft = MaxMovement;
+        
         // If not, move to the nearest reachable target
         foreach (ACharacter target in targetsByAscendingDistance)
         {
             List<(int x, int y)>? path = _pathfinder.FindPath((CurrentTile.X, CurrentTile.Y), (target.CurrentTile!.X, target.CurrentTile!.Y));
             
             if (path == null) continue;
-            
-            MoveTo(path[0].x, path[0].y);
+
+            MoveTowardsPath(path, target);
             return true;
         }
 
@@ -132,9 +136,29 @@ public abstract class ACharacter
         CurrentTile.Occupy(this);
     }
 
+    private void MoveTowardsPath(List<(int x, int y)> path, ACharacter target)
+    {
+        foreach ((int x, int y) in path)
+        {
+            int movCost = _characterClass.GetMovementCost(GameMap[x, y]);
+            
+            if (_movLeft < movCost) continue;
+            
+            _movLeft -= movCost;
+            MoveTo(x, y);
+
+            if (!IsWithinRange(target)) continue;
+            
+            GameMap.DisplayMap();
+            return;
+        }
+        GameMap.DisplayMap();
+    }
+
     private bool IsWithinRange(ACharacter character)
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
+        
         int distance = _characterClass.AttackDistance(CurrentTile, character.CurrentTile);
         return distance <= Range;
     }

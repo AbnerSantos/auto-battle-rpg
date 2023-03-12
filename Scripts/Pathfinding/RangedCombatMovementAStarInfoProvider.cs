@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Stage;
+﻿using AutoBattleRPG.Scripts.Character.Classes;
+using AutoBattleRPG.Scripts.Stage;
 
 namespace AutoBattleRPG.Scripts.Pathfinding;
 
@@ -6,7 +7,7 @@ public class RangedCombatMovementAStarInfoProvider : CombatMovementAStarInfoProv
 {
     private readonly int _range;
     
-    public RangedCombatMovementAStarInfoProvider(GameMap gameMap, int range) : base(gameMap)
+    public RangedCombatMovementAStarInfoProvider(GameMap gameMap, ICharacterClassDelegate characterClass, int range) : base(gameMap, characterClass)
     {
         _range = range;
     }

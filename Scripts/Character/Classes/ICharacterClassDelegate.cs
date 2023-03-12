@@ -12,6 +12,9 @@ public interface ICharacterClassDelegate
     public DiceRoll Def { get; }
     public int MaxHp { get; }
     public int Range { get; }
+    public int Movement { get; }
+
     public AStarPathfinder GeneratePathfinder(GameMap gameMap);
     public int AttackDistance(Tile t1, Tile t2);
+    public int GetMovementCost(Tile tile);
 }

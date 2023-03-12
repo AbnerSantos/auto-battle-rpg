@@ -7,7 +7,7 @@ public class Settings
     public int PartySize;
     public string Seed = RandomHelper.Seed;
 
-    public static (int x, int y) GridMinimum = (5, 5);
+    public static (int x, int y) GridMinimum = (2, 2);
         
     public static Settings DefaultSettings = new Settings
     {
