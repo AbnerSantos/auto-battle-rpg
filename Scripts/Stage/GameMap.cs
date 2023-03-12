@@ -15,11 +15,13 @@ public class GameMap : AMap<Tile>
     public GameMap(Settings settings)
     {
         Grid = new Tile[settings.GridSize.x, settings.GridSize.y];
+        float[,] noise = PerlinNoise.GenerateNoiseMap(Width, Height);
         for (int i = 0; i < Width; i++)
         {
             for (int j = 0; j < Height; j++)
             {
-                Tile newTile = new Tile(i, j, this);
+                Terrain.TerrainType terrain = noise[i, j] >= settings.ForestDensity ? Terrain.TerrainType.Forest : Terrain.TerrainType.Plains;
+                Tile newTile = new Tile(i, j, terrain, this);
                 Grid[i, j] = newTile;
                 AvailableTiles.Add(newTile);
             }
@@ -30,17 +32,17 @@ public class GameMap : AMap<Tile>
     {
         StringBuilder strBuilder = new StringBuilder();
         strBuilder.Append('╔');
-        strBuilder.Append('═', Grid.GetLength(0) * 3);
+        strBuilder.Append('═', Width * 3);
         strBuilder.Append('╗');
         Console.WriteLine(strBuilder.ToString());
 
-        for (int i = 0; i < Grid.GetLength(0); i++)
+        for (int i = 0; i < Height; i++)
         {
             Console.Write('║');
 
-            for (int j = 0; j < Grid.GetLength(1); j++)
+            for (int j = 0; j < Width; j++)
             {
-                Grid[i, j].DisplayTile();
+                Grid[j, i].DisplayTile();
             }
             
             Console.WriteLine('║');
@@ -49,7 +51,7 @@ public class GameMap : AMap<Tile>
         strBuilder.Clear();
         
         strBuilder.Append('╚');
-        strBuilder.Append('═', Grid.GetLength(0) * 3);
+        strBuilder.Append('═', Width * 3);
         strBuilder.Append('╝');
         Console.WriteLine(strBuilder.ToString());
     }
