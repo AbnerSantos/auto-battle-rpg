@@ -30,4 +30,32 @@ public class Warrior : ICharacterClassDelegate
     {
         return Terrain.MovementCostPerTerrain[tile.Terrain];
     }
+    
+    public void AttackQuote(ACharacter attacker, ACharacter target, DiceRoll roll, DiceResult rawDmg)
+    {
+        Console.WriteLine($"{attacker.Name} slashes {target.Name} for {roll} = {rawDmg} damage!");
+    }
+
+    public void DefenseQuote(ACharacter defendant, DiceResult defense)
+    {
+        Console.WriteLine($"{defendant.Name} raises their shield and blocks {defendant.Def} = {defense} damage!");
+    }
+
+    public void PerfectDefenseQuote(ACharacter defendant)
+    {
+        Console.WriteLine($"{defendant.Name} blocks all incoming damage!");
+    }
+
+    public void MovementQuote(ACharacter character, Tile prevTile, Tile newTile)
+    {
+        switch (newTile.Terrain)
+        {
+            case Terrain.TerrainType.Plains:
+                Console.WriteLine($"{character.Name} moved {Tile.GetCardinalDirection(prevTile, newTile)} in the plains.");
+                break;
+            case Terrain.TerrainType.Forest:
+                Console.WriteLine($"{character.Name} was slowed down by moving {Tile.GetCardinalDirection(prevTile, newTile)} into the thick forest.");
+                break;
+        }
+    }
 }

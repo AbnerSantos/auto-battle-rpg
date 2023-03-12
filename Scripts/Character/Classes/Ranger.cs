@@ -36,4 +36,32 @@ public class Ranger : ICharacterClassDelegate
         TerrainMovModifiers.TryGetValue(tile.Terrain, out int modifier);
         return Terrain.MovementCostPerTerrain[tile.Terrain] + modifier;
     }
+    
+    public void AttackQuote(ACharacter attacker, ACharacter target, DiceRoll roll, DiceResult rawDmg)
+    {
+        Console.WriteLine($"{attacker.Name} shoots {target.Name} for {roll} = {rawDmg} damage!");
+    }
+
+    public void DefenseQuote(ACharacter defendant, DiceResult defense)
+    {
+        Console.WriteLine($"{defendant.Name} tries to dodge and avoids {defendant.Def} = {defense} damage!");
+    }
+
+    public void PerfectDefenseQuote(ACharacter defendant)
+    {
+        Console.WriteLine($"{defendant.Name} fully dodges the attack!");
+    }
+
+    public void MovementQuote(ACharacter character, Tile prevTile, Tile newTile)
+    {
+        switch (newTile.Terrain)
+        {
+            case Terrain.TerrainType.Plains:
+                Console.WriteLine($"{character.Name} moved {Tile.GetCardinalDirection(prevTile, newTile)} in the plains.");
+                break;
+            case Terrain.TerrainType.Forest:
+                Console.WriteLine($"{character.Name} swiftly moved {Tile.GetCardinalDirection(prevTile, newTile)} into the forest.");
+                break;
+        }
+    }
 }

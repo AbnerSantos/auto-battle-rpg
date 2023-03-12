@@ -89,10 +89,10 @@ public abstract class ACharacter
     private void TryDamage(DiceRoll roll, ACharacter attacker)
     {
         DiceResult rawDmg = roll.Roll();
-        Console.WriteLine($"{attacker.Name} attacks {Name} for {roll} = {rawDmg} damage!");
+        _characterClass.AttackQuote(attacker, this, roll, rawDmg);
         
         DiceResult defense = Def.Roll();
-        Console.WriteLine($"{Name} blocks {Def} = {defense} damage!");
+        _characterClass.DefenseQuote(this, defense);
         
         int lostHp = rawDmg.Total - defense.Total;
         if (lostHp > 0)
@@ -108,7 +108,7 @@ public abstract class ACharacter
         }
         else
         {
-            Console.WriteLine($"{Name} blocks all incoming damage!");
+            _characterClass.PerfectDefenseQuote(this);
         }
         
         Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP left!");
@@ -131,6 +131,7 @@ public abstract class ACharacter
     {
         if (tile.IsOccupied) return;
 
+        if (CurrentTile != null) _characterClass.MovementQuote(this, CurrentTile, tile);
         CurrentTile?.Free();
         CurrentTile = tile;
         CurrentTile.Occupy(this);
