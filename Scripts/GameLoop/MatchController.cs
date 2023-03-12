@@ -126,6 +126,7 @@ public class MatchController
         string? rawName = Console.ReadLine();
         string name = ProcessCharacterName(rawName, playerClass, gameMap.PlayerTeam);
         PlayerCharacter player = new PlayerCharacter(gameMap, name, playerClass);
+        player.PrintSkillsInfo();
         player.PlaceOnMap();
         return player;
     }
@@ -138,6 +139,7 @@ public class MatchController
         string? rawName = Console.ReadLine();
         string name = ProcessCharacterName(rawName, enemyClass, gameMap.EnemyTeam, "Enemy ");
         EnemyCharacter enemy = new EnemyCharacter(gameMap, name, enemyClass);
+        enemy.PrintSkillsInfo();
         enemy.PlaceOnMap();
         return enemy;
     }

@@ -5,14 +5,14 @@ using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.BehaviorTree;
 
-public class HealManaInForests : APassiveSkill
+public class HealInForests : APassiveSkill
 {
-    private readonly DiceRoll _manaRecovery;
+    private readonly DiceRoll _hpRecovery;
     private readonly ACharacter _character;
     
-    public HealManaInForests(string name, string description, ACharacter character, DiceRoll manaRecovery) : base(name, description)
+    public HealInForests(string name, string description, ACharacter character, DiceRoll hpRecovery) : base(name, description)
     {
-        _manaRecovery = manaRecovery;
+        _hpRecovery = hpRecovery;
         _character = character;
     }
 
@@ -22,7 +22,7 @@ public class HealManaInForests : APassiveSkill
 
         if (_character.CurrentTile.Terrain != Terrain.TerrainType.Forest) return;
         
-        Console.WriteLine($"{_character.Name} meditates in the woods and recovers mana!");
-        _character.HealMana(_manaRecovery);
+        Console.WriteLine($"{_character.Name} meditates in the woods and recovers health!");
+        _character.Heal(_hpRecovery);
     }
 }
