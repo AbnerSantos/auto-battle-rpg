@@ -20,7 +20,7 @@ public class GameMap : AMap<Tile>
         {
             for (int j = 0; j < Height; j++)
             {
-                Terrain.TerrainType terrain = noise[i, j] >= settings.ForestDensity ? Terrain.TerrainType.Forest : Terrain.TerrainType.Plains;
+                Terrain.TerrainType terrain = noise[i, j] >= 1 - settings.ForestDensity ? Terrain.TerrainType.Forest : Terrain.TerrainType.Plains;
                 Tile newTile = new Tile(i, j, terrain, this);
                 Grid[i, j] = newTile;
                 AvailableTiles.Add(newTile);

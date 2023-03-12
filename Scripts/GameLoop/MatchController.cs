@@ -15,28 +15,42 @@ public class MatchController
             // Fetching settings
             Console.WriteLine("\nWelcome to Trust in Your Party - The RPG!\n");
             
-            Console.WriteLine($"What's the width of your battlefield? (Min: {Settings.GridMinimum.x}, Recommended: {Settings.DefaultSettings.GridSize.x})");
-            int width = InputHelper.GetNumber(Settings.GridMinimum.x, int.MaxValue);
-            
-            Console.WriteLine($"What's the height of your battlefield? (Min: {Settings.GridMinimum.y}, Recommended: {Settings.DefaultSettings.GridSize.y})");
-            int height = InputHelper.GetNumber(Settings.GridMinimum.y, int.MaxValue);
+            Console.WriteLine("Do you wish to use the recommended settings?[y/n]");
+            ConsoleKeyInfo key = InputHelper.GetKey(new HashSet<char> { 'y', 'n' });
 
-            int maxPartySize = Settings.MaxPartySize(width, height);
-            Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
-            int partySize = InputHelper.GetNumber(1, maxPartySize);
+            Settings settings = key.KeyChar == 'y' ? Settings.DefaultSettings : CustomSettings();
 
-            Settings settings = new Settings
-            {
-                GridSize = (width, height),
-                PartySize = partySize
-            };
-            
             StartMatch(settings);
             
             Console.WriteLine("\nDo you want to play again?[y/n]");
-            ConsoleKeyInfo key = InputHelper.GetKey(new HashSet<char> { 'y', 'n' });
+            key = InputHelper.GetKey(new HashSet<char> { 'y', 'n' });
             if (key.KeyChar == 'n') isRunning = false;
         }
+    }
+
+    private Settings CustomSettings()
+    {
+        Console.WriteLine($"What's the width of your battlefield? (Min: {Settings.GridMinimum.x}, Recommended: {Settings.DefaultSettings.GridSize.x})");
+        int width = InputHelper.GetInteger(Settings.GridMinimum.x, int.MaxValue);
+            
+        Console.WriteLine($"What's the height of your battlefield? (Min: {Settings.GridMinimum.y}, Recommended: {Settings.DefaultSettings.GridSize.y})");
+        int height = InputHelper.GetInteger(Settings.GridMinimum.y, int.MaxValue);
+
+        int maxPartySize = Settings.MaxPartySize(width, height);
+        Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
+        int partySize = InputHelper.GetInteger(1, maxPartySize);
+        
+        Console.WriteLine($"How dense do you want forests to be? (Min: {Settings.ForestConstraints.min}, Max: {Settings.ForestConstraints.max}, Recommended: {Settings.DefaultSettings.ForestDensity})");
+        float forestDensity = InputHelper.GetFloat(Settings.ForestConstraints.min, Settings.ForestConstraints.max);
+
+        Settings settings = new Settings
+        {
+            GridSize = (width, height),
+            PartySize = partySize,
+            ForestDensity = forestDensity
+        };
+
+        return settings;
     }
     
     private void StartMatch(Settings settings)
@@ -132,9 +146,12 @@ public class MatchController
     private string ProcessCharacterName(string? rawName, ICharacterClassDelegate characterClass, List<ACharacter> team, string prefix = "")
     {
         string? name = rawName;
-        // Class name if no name has been input
-        if (string.IsNullOrWhiteSpace(rawName)) name = $"{prefix}{characterClass.Name}";
+        bool isDefaultName = string.IsNullOrWhiteSpace(rawName);
         
+        // Class name if no name has been input
+        if (isDefaultName) name = $"{prefix}{characterClass.Name}";
+        else name = $"{name} ({characterClass.Name})";
+
         bool IsUnique() => !team.Exists(character => character.Name.Equals(name));
         
         int instances = 1;
