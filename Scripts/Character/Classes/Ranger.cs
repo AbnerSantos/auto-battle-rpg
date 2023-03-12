@@ -60,14 +60,15 @@ public class Ranger : ICharacterClassDelegate
 
     public List<APassiveSkill> SetupPassiveSkills(ACharacter character)
     {
+        DiceRoll healDice = new DiceRoll(new List<Die> { new Die(4) }, 0);
         return new List<APassiveSkill>
         {
-            new HealManaInForests
+            new HealInForests
             (
                 name: "Boyscout",
-                description: "The Ranger finds peace in starting his turn in the forest and heals some Mana.",
+                description: $"The Ranger finds peace in starting his turn in the forest and heals {healDice} health.",
                 character: character,
-                manaRecovery: new DiceRoll(new List<Die> { new Die(4) }, 1)
+                hpRecovery: healDice
             )
         };
     }

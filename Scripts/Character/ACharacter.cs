@@ -190,7 +190,16 @@ public abstract class ACharacter
     {
         DiceResult mana = manaRecovery.Roll();
         Console.WriteLine($"{Name} concentrates and recovers {manaRecovery} = {mana} mana!");
+        Mana += mana.Total;
         Console.WriteLine($"{Name} has {Mana}/{MaxMana} Mana!");
+    }
+    
+    public void Heal(DiceRoll hpRecovery)
+    {
+        DiceResult hp = hpRecovery.Roll();
+        Console.WriteLine($"{Name} recovers {hpRecovery} = {hp} health!");
+        Hp += hp.Total;
+        Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP!");
     }
 
     public void SpendMana(int total)
@@ -217,5 +226,14 @@ public abstract class ACharacter
         }
 
         return activeSkills;
+    }
+
+    public void PrintSkillsInfo()
+    {
+        Console.WriteLine("Skills:");
+        foreach (INamedSkill skill in AllSkills)
+        {
+            Console.WriteLine($"\t- {skill.Name}: {skill.Description}");
+        }
     }
 }

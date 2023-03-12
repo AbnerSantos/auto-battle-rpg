@@ -29,10 +29,10 @@ public class Warrior : ICharacterClassDelegate
             normalAttackRoll,
             manaCost: 0,
             attackQuote: (target, result) => AttackQuote(rpgBtData.Character, target, normalAttackRoll, result),
-            defaultWeight: 19
+            defaultWeight: 1
         );
         
-        DiceRoll critAttackRoll = new DiceRoll(new List<Die>{ new Die(10) }, 2);
+        DiceRoll critAttackRoll = new DiceRoll(new List<Die>{ new Die(10), new Die(10) }, 2);
         AttackTargetInRangeSkill critAttack = new
         (
             name: "Impale",
