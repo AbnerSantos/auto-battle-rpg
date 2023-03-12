@@ -3,16 +3,19 @@
 [Serializable]
 public class Settings
 {
-    public (int x, int y) GridSize;
-    public int PartySize;
+    public (int x, int y) GridSize = (16, 10);
+    public int PartySize = 2;
+    public float ForestDensity = 0.55f;
     public string Seed = RandomHelper.Seed;
 
     public static (int x, int y) GridMinimum = (2, 2);
+    public static (float min, float max) ForestConstraints = (0f, 1f);
         
     public static Settings DefaultSettings = new Settings
     {
-        GridSize = (9, 9),
-        PartySize = 2
+        GridSize = (16, 10),
+        PartySize = 2,
+        ForestDensity = 0.55f
     };
     
     public static int MaxPartySize(int width, int height) => width * height / 2;

@@ -10,8 +10,9 @@ namespace AutoBattleRPG.Scripts.Utility;
 /// </summary>
 public static class PerlinNoise
 {
-    private const float Frequency = 0.5f;
+    private const float Frequency = 5f;
     private const float Amplitude = 1f;
+    private const int Octaves = 8;
     
     private static readonly Vector2[] Gradients;
     private static int[] _permutation;
@@ -70,7 +71,7 @@ public static class PerlinNoise
         return Drop(u) * Drop(v);
     }
 
-    public static float Noise(float x, float y)
+    private static float Noise(float x, float y)
     {
         var cell = new Vector2((float)Math.Floor(x), (float)Math.Floor(y));
 
@@ -94,7 +95,7 @@ public static class PerlinNoise
         return Math.Max(Math.Min(total, 1f), -1f);
     }
 
-    public static float[,] GenerateNoiseMap(int width, int height, int octaves)
+    public static float[,] GenerateNoiseMap(int width, int height)
     {
         float[,] texture = new float[width, height];
         
@@ -106,7 +107,7 @@ public static class PerlinNoise
         float amplitude = Amplitude;
         float frequency = Frequency;
 
-        for (var octave = 0; octave < octaves; octave++)
+        for (var octave = 0; octave < Octaves; octave++)
         {
             float freq = frequency;
             float ampl = amplitude;
@@ -137,10 +138,5 @@ public static class PerlinNoise
         }
 
         return texture;
-    }
-
-    public static void TestMap()
-    {
-        GenerateNoiseMap(9, 9, 5);
     }
 }
