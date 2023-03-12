@@ -3,10 +3,16 @@ using AutoBattleRPG.Scripts.Utility;
 
 namespace AutoBattleRPG.Scripts.BehaviorTree;
 
-public class IsWithinTargetRangeSelectorNode : ABtConditionalSelectorNode<RpgBtData>
+public class IsWithinTargetRangeSelectorNode : ABtConditionalSelectorNode<RpgBtData>, IWeightedSkill
 {
-    public IsWithinTargetRangeSelectorNode(ABtNode<RpgBtData> ifFalse, ABtNode<RpgBtData> ifTrue) : base(ifFalse, ifTrue)
+    public IWeightedSkillDelegate? SkillWeightDelegate { get; set; }
+    private readonly int _defaultWeight;
+
+    public IsWithinTargetRangeSelectorNode(ABtNode<RpgBtData> ifFalse, ABtNode<RpgBtData> ifTrue, int defaultWeight = 1, IWeightedSkillDelegate? skillWeightDelegate = null) 
+        : base(ifFalse, ifTrue)
     {
+        _defaultWeight = defaultWeight;
+        SkillWeightDelegate = skillWeightDelegate;
     }
 
     protected override bool CheckCondition()
@@ -24,5 +30,12 @@ public class IsWithinTargetRangeSelectorNode : ABtConditionalSelectorNode<RpgBtD
         BtData.TargetsByAscendingDistance = targetsByAscendingDistance;
         
         return BtData.Character.IsWithinRange(nearestTarget);
+    }
+    
+    public int GetWeight()
+    {
+        if (BtData == null) throw new Exceptions.BtDataIsNull();
+        
+        return SkillWeightDelegate?.GetWeight(BtData) ?? _defaultWeight;
     }
 }

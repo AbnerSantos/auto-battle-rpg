@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Character.Classes;
+﻿using AutoBattleRPG.Scripts.Character;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Stage;
 
 namespace AutoBattleRPG.Scripts.Pathfinding;
@@ -6,17 +7,17 @@ namespace AutoBattleRPG.Scripts.Pathfinding;
 public abstract class CombatMovementAStarInfoProvider : IAStarInfoProviderDelegate
 {
     protected readonly GameMap GameMap;
-    private readonly ICharacterClassDelegate _characterClass;
+    private readonly ACharacter _character;
 
-    protected CombatMovementAStarInfoProvider(GameMap gameMap, ICharacterClassDelegate characterClass)
+    protected CombatMovementAStarInfoProvider(GameMap gameMap, ACharacter character)
     {
         GameMap = gameMap;
-        _characterClass = characterClass;
+        _character = character;
     }
 
     public int GetMovementCost(int x, int y)
     {
-        return _characterClass.GetMovementCost(GameMap[x, y]);
+        return _character.GetMovementCost(GameMap[x, y]);
     }
 
     public abstract List<PathNode> GetNeighborhood(PathNode currentNode, PathNode targetNode);

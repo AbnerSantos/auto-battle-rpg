@@ -4,8 +4,8 @@ namespace AutoBattleRPG.Scripts.Dice;
 
 public class DiceRoll
 {
-    public int Modifier { get; private set; }
-    public List<Die> Dice { get; private set; }
+    public int Modifier { get; }
+    public List<Die> Dice { get; }
 
     public DiceRoll(List<Die> dice, int modifier = 0)
     {
