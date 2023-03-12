@@ -36,7 +36,7 @@ public class GameMap : AMap<Tile>
         strBuilder.Append('╗');
         Console.WriteLine(strBuilder.ToString());
 
-        for (int i = 0; i < Height; i++)
+        for (int i = Height - 1; i >= 0; i--)
         {
             Console.Write('║');
 

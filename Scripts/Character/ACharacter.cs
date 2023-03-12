@@ -1,4 +1,5 @@
-﻿using AutoBattleRPG.Scripts.Character.Classes;
+﻿using AutoBattleRPG.Scripts.BehaviorTree;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Dice;
 using AutoBattleRPG.Scripts.Pathfinding;
 using AutoBattleRPG.Scripts.Stage;
@@ -9,31 +10,42 @@ namespace AutoBattleRPG.Scripts.Character;
 public abstract class ACharacter
 {
     public readonly string Name;
-    protected readonly GameMap GameMap;
-    private readonly ICharacterClassDelegate _characterClass;
-    private readonly AStarPathfinder _pathfinder;
+    public readonly AStarPathfinder Pathfinder;
+    public readonly BehaviorTree<RpgBtData> BehaviorTree;
+    public readonly Dictionary<Terrain.TerrainType, int> TerrainMovModifiers = new();
+    public readonly List<INamedSkill> AllSkills;
     
+    protected readonly GameMap GameMap;
+    
+    private readonly ICharacterClassDelegate _characterClass;
+    private readonly List<APassiveSkill> _passiveSkills;
+
     private int _hp;
+    private int _mana;
     private int _movLeft;
 
     public event Action<List<ACharacter>>? Died;
 
-    public DiceRoll Atk => _characterClass.Atk;
-    public DiceRoll Def => _characterClass.Def;
+    public DiceRoll? Def => _characterClass.Def;
     public int MaxHp => _characterClass.MaxHp;
+    public int MaxMana => _characterClass.MaxMana;
     public int Range => _characterClass.Range;
     public int MaxMovement => _characterClass.Movement;
     public char Symbol => _characterClass.Symbol;
     public Tile? CurrentTile { get; private set; }
     public abstract List<ACharacter> AvailableTargets { get; }
     public abstract List<ACharacter> Team { get; }
-    public int? X => CurrentTile?.X;
-    public int? Y => CurrentTile?.Y;
     public bool IsAlive => Hp > 0;
-    public int Hp
+
+    private int Hp
     {
         get => _hp;
-        private set => _hp = Math.Clamp(value, 0, MaxHp);
+        set => _hp = Math.Clamp(value, 0, MaxHp);
+    }
+    public int Mana
+    {
+        get => _mana;
+        private set => _mana = Math.Clamp(value, 0, MaxMana);
     }
 
     protected ACharacter(GameMap gameMap, string name, ICharacterClassDelegate characterClass)
@@ -41,42 +53,25 @@ public abstract class ACharacter
         GameMap = gameMap;
         _characterClass = characterClass;
         Hp = _characterClass.MaxHp;
+        Mana = _characterClass.MaxMana;
+        BehaviorTree = _characterClass.SetupBehaviorTree(new RpgBtData(GameMap, this));
+        _passiveSkills = _characterClass.SetupPassiveSkills(this);
+        var pickUpSkills = _characterClass.SetupStartingPickUpSkills(this);
+        var activeSkills = FetchActiveSkills();
+        AllSkills = new List<INamedSkill>(activeSkills);
+        AllSkills.AddRange(pickUpSkills);
+        AllSkills.AddRange(_passiveSkills);
         Name = name;
-        _pathfinder = characterClass.GeneratePathfinder(gameMap);
+        Pathfinder = characterClass.GeneratePathfinder(gameMap, this);
     }
 
     public bool TryProcessTurn()
     {
         if (!IsAlive || CurrentTile == null) return false;
 
-        List<ACharacter> targetsByAscendingDistance = AvailableTargetsAscendingDistance();
+        foreach (APassiveSkill skill in _passiveSkills) skill.Execute();
 
-        if (targetsByAscendingDistance.Count == 0) return false;
-        
-        ACharacter nearestTarget = targetsByAscendingDistance[0];
-        
-        // If within range, attack
-        if (IsWithinRange(nearestTarget))
-        {
-            nearestTarget.TryDamage(Atk, this);
-            return true;
-        }
-
-        _movLeft = MaxMovement;
-        
-        // If not, move to the nearest reachable target
-        foreach (ACharacter target in targetsByAscendingDistance)
-        {
-            List<(int x, int y)>? path = _pathfinder.FindPath((CurrentTile.X, CurrentTile.Y), (target.CurrentTile!.X, target.CurrentTile!.Y));
-            
-            if (path == null) continue;
-
-            MoveTowardsPath(path, target);
-            return true;
-        }
-
-        Console.WriteLine("No path to any available targets!");
-        return true;
+        return BehaviorTree.Execute();
     }
 
     public void PlaceOnMap()
@@ -86,18 +81,25 @@ public abstract class ACharacter
         MoveTo(GameMap.AvailableTiles[randIndex]);
     }
 
-    private void TryDamage(DiceRoll roll, ACharacter attacker)
+    public void ResetMovement()
     {
-        DiceResult rawDmg = roll.Roll();
-        _characterClass.AttackQuote(attacker, this, roll, rawDmg);
+        _movLeft = MaxMovement;
+    }
+
+    public void TryDamage(int rawDmg, ACharacter attacker)
+    {
+        int defenseTotal = 0;
+        if (Def != null)
+        {
+            DiceResult defense = Def.Roll();
+            _characterClass.DefenseQuote(this, defense);
+            defenseTotal = defense.Total;
+        }
         
-        DiceResult defense = Def.Roll();
-        _characterClass.DefenseQuote(this, defense);
-        
-        int lostHp = rawDmg.Total - defense.Total;
+        int lostHp = rawDmg - defenseTotal;
         if (lostHp > 0)
         {
-            Console.WriteLine($"{Name} loses {rawDmg.Total - defense.Total} Hp!");
+            Console.WriteLine($"{Name} loses {lostHp} Hp!");
 
             Hp -= lostHp;
             if (!IsAlive)
@@ -137,11 +139,11 @@ public abstract class ACharacter
         CurrentTile.Occupy(this);
     }
 
-    private void MoveTowardsPath(List<(int x, int y)> path, ACharacter target)
+    public void MoveTowardsPath(List<(int x, int y)> path, ACharacter target)
     {
         foreach ((int x, int y) in path)
         {
-            int movCost = _characterClass.GetMovementCost(GameMap[x, y]);
+            int movCost = GetMovementCost(GameMap[x, y]);
             
             if (_movLeft < movCost) continue;
             
@@ -156,7 +158,13 @@ public abstract class ACharacter
         GameMap.DisplayMap();
     }
 
-    private bool IsWithinRange(ACharacter character)
+    public int GetMovementCost(Tile tile)
+    {
+        TerrainMovModifiers.TryGetValue(tile.Terrain, out int modifier);
+        return Terrain.MovementCostPerTerrain[tile.Terrain] + modifier;
+    }
+
+    public bool IsWithinRange(ACharacter character)
     {
         if (CurrentTile == null || character.CurrentTile == null) return false;
         
@@ -164,7 +172,7 @@ public abstract class ACharacter
         return distance <= Range;
     }
 
-    private List<ACharacter> AvailableTargetsAscendingDistance()
+    public List<ACharacter> AvailableTargetsAscendingDistance()
     {
         List<ACharacter> targets = new ();
         foreach (ACharacter target in AvailableTargets)
@@ -176,5 +184,56 @@ public abstract class ACharacter
             .CompareTo(_characterClass.AttackDistance(CurrentTile!, character2.CurrentTile!)));
         
         return targets;
+    }
+
+    public void HealMana(DiceRoll manaRecovery)
+    {
+        DiceResult mana = manaRecovery.Roll();
+        Console.WriteLine($"{Name} concentrates and recovers {manaRecovery} = {mana} mana!");
+        Mana += mana.Total;
+        Console.WriteLine($"{Name} has {Mana}/{MaxMana} Mana!");
+    }
+    
+    public void Heal(DiceRoll hpRecovery)
+    {
+        DiceResult hp = hpRecovery.Roll();
+        Console.WriteLine($"{Name} recovers {hpRecovery} = {hp} health!");
+        Hp += hp.Total;
+        Console.WriteLine($"{Name} has {Hp}/{MaxHp} HP!");
+    }
+
+    public void SpendMana(int total)
+    {
+        if (total <= 0) return;
+        
+        Mana -= total;
+        Console.WriteLine($"{Name} has {Mana}/{MaxMana} Mana left!");
+    }
+
+    private List<AActiveSkill> FetchActiveSkills()
+    {
+        return ChildActiveSkills(BehaviorTree.RootNode!);
+    }
+
+    private List<AActiveSkill> ChildActiveSkills(ABtNode<RpgBtData?> node)
+    {
+        List<AActiveSkill> activeSkills = new();
+        if (node is AActiveSkill active) activeSkills.Add(active);
+        
+        foreach (ABtNode<RpgBtData?> childNode in node.ChildNodes)
+        {
+           activeSkills.AddRange(ChildActiveSkills(childNode));
+        }
+
+        return activeSkills;
+    }
+
+    public void PrintSkillsInfo()
+    {
+        Console.WriteLine("Skills:");
+        foreach (INamedSkill skill in AllSkills)
+        {
+            Console.WriteLine($"\t- {skill.Name}: {skill.Description}");
+        }
     }
 }

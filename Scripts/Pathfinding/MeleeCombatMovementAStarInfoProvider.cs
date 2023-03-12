@@ -1,11 +1,12 @@
-﻿using AutoBattleRPG.Scripts.Character.Classes;
+﻿using AutoBattleRPG.Scripts.Character;
+using AutoBattleRPG.Scripts.Character.Classes;
 using AutoBattleRPG.Scripts.Stage;
 
 namespace AutoBattleRPG.Scripts.Pathfinding;
 
 public class MeleeCombatMovementAStarInfoProvider : CombatMovementAStarInfoProvider
 { 
-    public MeleeCombatMovementAStarInfoProvider(GameMap gameMap, ICharacterClassDelegate characterClass) : base(gameMap, characterClass)
+    public MeleeCombatMovementAStarInfoProvider(GameMap gameMap, ACharacter character) : base(gameMap, character)
     {
     }
     

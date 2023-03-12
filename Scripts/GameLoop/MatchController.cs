@@ -35,14 +35,13 @@ public class MatchController
             
         Console.WriteLine($"What's the height of your battlefield? (Min: {Settings.GridMinimum.y}, Recommended: {Settings.DefaultSettings.GridSize.y})");
         int height = InputHelper.GetInteger(Settings.GridMinimum.y, int.MaxValue);
-
-        int maxPartySize = Settings.MaxPartySize(width, height);
-        Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
-        int partySize = InputHelper.GetInteger(1, maxPartySize);
         
         Console.WriteLine($"How dense do you want forests to be? (Min: {Settings.ForestConstraints.min}, Max: {Settings.ForestConstraints.max}, Recommended: {Settings.DefaultSettings.ForestDensity})");
         float forestDensity = InputHelper.GetFloat(Settings.ForestConstraints.min, Settings.ForestConstraints.max);
 
+        int maxPartySize = Settings.MaxPartySize(width, height);
+        Console.WriteLine($"What will be the party size? (Min: 1, Max: {maxPartySize}, Recommended: {Settings.DefaultSettings.PartySize})");
+        int partySize = InputHelper.GetInteger(1, maxPartySize);
         Settings settings = new Settings
         {
             GridSize = (width, height),
@@ -111,7 +110,7 @@ public class MatchController
         char option = '1';
         foreach ((_, ICharacterClassDelegate characterClass) in CharacterClasses.PlayerClasses)
         {
-            Console.WriteLine($"[{option}] - {characterClass.Name}");
+            Console.WriteLine($"[{option}] - {characterClass.Name} - {characterClass.Description}");
             option = Convert.ToChar(option + 1);
         }
 
@@ -127,6 +126,7 @@ public class MatchController
         string? rawName = Console.ReadLine();
         string name = ProcessCharacterName(rawName, playerClass, gameMap.PlayerTeam);
         PlayerCharacter player = new PlayerCharacter(gameMap, name, playerClass);
+        player.PrintSkillsInfo();
         player.PlaceOnMap();
         return player;
     }
@@ -139,6 +139,7 @@ public class MatchController
         string? rawName = Console.ReadLine();
         string name = ProcessCharacterName(rawName, enemyClass, gameMap.EnemyTeam, "Enemy ");
         EnemyCharacter enemy = new EnemyCharacter(gameMap, name, enemyClass);
+        enemy.PrintSkillsInfo();
         enemy.PlaceOnMap();
         return enemy;
     }
@@ -149,8 +150,7 @@ public class MatchController
         bool isDefaultName = string.IsNullOrWhiteSpace(rawName);
         
         // Class name if no name has been input
-        if (isDefaultName) name = $"{prefix}{characterClass.Name}";
-        else name = $"{name} ({characterClass.Name})";
+        name = isDefaultName ? $"{prefix}{characterClass.Name}" : $"{name} ({characterClass.Name})";
 
         bool IsUnique() => !team.Exists(character => character.Name.Equals(name));
         
@@ -161,6 +161,6 @@ public class MatchController
             name = $"{prefix}{characterClass.Name} {instances++}";
         }
 
-        return name!;
+        return name;
     }
 }
