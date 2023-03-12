@@ -51,7 +51,7 @@ public class Tile
     {
         if (IsOccupied)
         {
-            ConsoleColor color = Character is PlayerCharacter ? ConsoleColor.Green : ConsoleColor.Red;
+            ConsoleColor color = Character is PlayerCharacter ? ConsoleColor.Blue : ConsoleColor.Red;
             Terrain.Draw(Character!.Symbol, color);
         }
         else
